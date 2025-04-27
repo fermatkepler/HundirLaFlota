@@ -1,4 +1,6 @@
-﻿namespace HundirLaFlota
+﻿using System.Runtime.InteropServices.JavaScript;
+
+namespace HundirLaFlota
 {
     internal class Program
     {
@@ -100,7 +102,133 @@
                 Console.WriteLine("¡Ganó J2!");
             }
         }
-        private static bool CrearBarcosEnTablero(Tablero tablero, bool soyIA=false)
+
+        private static void Guerra(bool soyIA = false)
+        {
+            Coordenada shoot;
+            Coordenada buenDisparo = null;
+
+            while (barcosHundidosPorJ1 != NUM_BARCOS_A_HUNDIR && barcosHundidosPorJ2 != NUM_BARCOS_A_HUNDIR) // se podría hacer con tableroJ1.QuedanBarcosAFlote()
+            {
+                Console.WriteLine("Jugador 1... ");
+                var resultados = EleccionArmaContra(tableroJ2);
+                foreach (var resultado in resultados)
+                {
+                    if (resultado == ResultadoDisparo.Hundido)
+                    {
+                        barcosHundidosPorJ1++;
+                    }
+                }
+
+                //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
+                Console.WriteLine("Jugador 2... ");
+                //El segundo jugador puede disparar como IA si se ha requerido así
+                if (soyIA)
+                {
+                    Console.WriteLine("Dispara!");
+                    // A la IA no se le implementan las acciones de elegir arma. Siempre usará un disparo normal. 
+                    shoot = CapturaCoordenadaDeLaIA(buenDisparo);
+                    Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})");
+                    ResultadoDisparo result = tableroJ1.ResultadoDelDisparo(shoot);
+                    ImprimeResultado(result);
+
+                    if (result == ResultadoDisparo.Tocado)
+                    {
+                        // Guardamos el tiro para que la IA se aproxime en el siguiente turno
+                        buenDisparo = shoot;
+                    }
+                    else
+                    {
+                        buenDisparo = null;
+                    }
+                }
+                else
+                {
+                    resultados = EleccionArmaContra(tableroJ1);
+                    foreach (var resultado in resultados)
+                    {
+                        if (resultado == ResultadoDisparo.Hundido)
+                        {
+                            barcosHundidosPorJ2++;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static List<ResultadoDisparo> EleccionArmaContra(Tablero tablero)
+        {
+            bool opcionValida = false;
+            string opcion = string.Empty;
+
+            Console.WriteLine("N -> Disparo Normal");
+            Console.WriteLine("S -> Super-Disparo");
+            Console.WriteLine("D -> Disparo Doble");
+            Console.WriteLine("R -> Radar");
+            Console.WriteLine("Elige una opción:");
+
+            while (!opcionValida)
+            {
+                opcion = Console.ReadLine().ToUpper();
+
+                if (opcion == "N" || opcion == "S" || opcion == "D" || opcion == "R")
+                {
+                    opcionValida = true;
+                }
+            }
+            switch (opcion)
+            {
+                case "N":
+                    {
+                        return DisparoNormal(tablero);
+                        break;
+                    }
+                case "S":
+                    {
+                        return SuperDisparo(tablero);
+                        break;
+                    }
+                case "D":
+                    {
+                        break;
+                    }
+                case "R":
+                    {
+                        break;
+                    }
+                default:
+                    {
+                        break;
+                    }
+            }
+
+            return new List<ResultadoDisparo>();
+        }
+
+        private static List<ResultadoDisparo> SuperDisparo(Tablero tablero)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static List<ResultadoDisparo> DisparoNormal(Tablero tablero)
+        {
+            Coordenada shoot;
+            var resultados = new List<ResultadoDisparo>();
+
+            Console.WriteLine("Dispara!");
+
+            shoot = CapturaCoordenadaDeLaConsola();
+            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})");
+
+            ResultadoDisparo result = tablero.ResultadoDelDisparo(shoot);
+            ImprimeResultado(result);
+
+            resultados.Add(result);
+
+            return resultados;
+        }
+
+        private static bool CrearBarcosEnTablero(Tablero tablero, bool soyIA = false)
         {
             tablero.PrintTablero(true);
 
@@ -133,6 +261,65 @@
             }
 
             return true;
+        }
+
+        private static void PosicionaBarcoEnTablero(Tablero tablero, Barco barco, bool soyIA = false)
+        {
+            bool posicionFactible = false;
+            Coordenada inicio = null;
+            Coordenada fin = null;
+
+            while (!posicionFactible)
+            {
+                if (soyIA)
+                {
+                    (inicio, fin) = CapturaCoordenadasAleatorias(barco);
+                }
+                else
+                {
+                    (inicio, fin) = CapturaCoordenadasDelUsuario(barco);
+                }
+
+                // Establecemos la posición del barco en función de sus coordenadas
+                if (inicio.x == fin.x)
+                {
+                    barco.Posicion = Posicion.Horizontal;
+                }
+                else
+                {
+                    barco.Posicion = Posicion.Vertical;
+                }
+
+                posicionFactible = tablero.IntentaColocar(barco, inicio, fin);
+            }
+            tablero.Coloca(barco, inicio, fin);
+        }
+
+        private static void ImprimeResultado(ResultadoDisparo result)
+        {
+            switch (result)
+            {
+                case ResultadoDisparo.Agua:
+                    {
+                        Console.WriteLine("¡AGUA!");
+                        break;
+                    }
+                case ResultadoDisparo.Tocado:
+                    {
+                        Console.WriteLine("¡TOCADO!");
+                        break;
+                    }
+                case ResultadoDisparo.Hundido:
+                    {
+                        Console.WriteLine("¡HUNDIDO!");
+                        break;
+                    }
+                default:
+                    {
+                        Console.WriteLine("ERROR");
+                        break;
+                    }
+            }
         }
 
         private static (Coordenada, Coordenada) CapturaCoordenadasAleatorias(Barco barco)
@@ -174,122 +361,6 @@
             return (inicio, fin);
         }
 
-        private static void PosicionaBarcoEnTablero(Tablero tablero, Barco barco, bool soyIA = false)
-        {
-            bool posicionFactible = false;
-            Coordenada inicio = null;
-            Coordenada fin = null;
-
-            while (!posicionFactible)
-            {
-                if (soyIA)
-                {
-                    (inicio, fin) = CapturaCoordenadasAleatorias(barco);
-                }
-                else
-                {
-                    (inicio, fin) = CapturaCoordenadasDelUsuario(barco);
-                }
-
-                // Establecemos la posición del barco en función de sus coordenadas
-                if (inicio.x == fin.x)
-                {
-                    barco.Posicion = Posicion.Horizontal;
-                }
-                else
-                {
-                    barco.Posicion = Posicion.Vertical;
-                }
-
-                posicionFactible = tablero.IntentaColocar(barco, inicio, fin);
-            }
-            tablero.Coloca(barco, inicio, fin);
-        }
-
-        private static void Guerra(bool soyIA = false)
-        {
-            Coordenada buenDisparo = null;
-
-            while (barcosHundidosPorJ1!= NUM_BARCOS_A_HUNDIR && barcosHundidosPorJ2 != NUM_BARCOS_A_HUNDIR) // se podría hacer con tableroJ1.QuedanBarcosAFlote()
-            {
-                Coordenada shoot;
-                Console.WriteLine("Jugador 1... Dispara!");
-                //El primer jugador NUNCA es IA
-                shoot = CapturaCoordenadaDeLaConsola();
-                Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})");
-
-                ResultadoDisparo result = tableroJ2.ResultadoDelDisparo(shoot);
-                ImprimeResultado(result);
-
-                if (result == ResultadoDisparo.Tocado)
-                {
-
-                }
-
-                if (result == ResultadoDisparo.Hundido)
-                {
-                    barcosHundidosPorJ1++;
-                }
-
-                //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
-                Console.WriteLine("Jugador 2... Dispara!");
-                //El segundo jugador puede disparar como IA si se ha requerido así
-                if (soyIA)
-                {
-                    shoot = CapturaCoordenadaDeLaIA(buenDisparo);
-                }
-                else
-                {
-                    shoot = CapturaCoordenadaDeLaConsola();
-                }
-
-                Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x+65)}{shoot.y})");
-                result = tableroJ1.ResultadoDelDisparo(shoot);
-                ImprimeResultado(result);
-
-                if (result == ResultadoDisparo.Tocado)
-                {
-                    // Guardamos el tiro para que la IA se aproxime en el siguiente turno
-                    buenDisparo = shoot;
-                }
-                else
-                {
-                    buenDisparo = null;
-                }
-
-                if (result == ResultadoDisparo.Hundido)
-                {
-                    barcosHundidosPorJ2++;
-                }
-            }
-        }
-
-        private static void ImprimeResultado(ResultadoDisparo result)
-        {
-            switch (result)
-            {
-                case ResultadoDisparo.Agua:
-                    {
-                        Console.WriteLine("¡AGUA!");
-                        break;
-                    }
-                case ResultadoDisparo.Tocado:
-                    {
-                        Console.WriteLine("¡TOCADO!");
-                        break;
-                    }
-                case ResultadoDisparo.Hundido:
-                    {
-                        Console.WriteLine("¡HUNDIDO!");
-                        break;
-                    }
-                default:
-                    {
-                        Console.WriteLine("ERROR");
-                        break;
-                    }
-            }
-        }
         private static Coordenada CapturaCoordenadaDeLaIA(Coordenada buenDisparo)
         {
             int nuevaX = 0;
