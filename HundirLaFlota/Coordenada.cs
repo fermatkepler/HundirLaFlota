@@ -17,12 +17,11 @@ namespace HundirLaFlota
         }
     }
 
-    public enum Estado
+    public enum EstadoBarco
     {
-        Agua = 0,
-        Barco,
-        AguaTocada,
-        BarcoTocado
+        Indemne = 0,
+        Tocado,
+        Hundido
     }
 
     public enum ResultadoDisparo
@@ -30,5 +29,11 @@ namespace HundirLaFlota
         Agua = 0,
         Tocado,
         Hundido
+    }
+
+    public enum Posicion
+    {
+        Vertical = 0, 
+        Horizontal
     }
 }

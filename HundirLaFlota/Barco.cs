@@ -5,6 +5,10 @@ namespace HundirLaFlota
     internal class Barco
     {
         public int Length { get; }
+
+        // La posición la sacaremos de las coordenadas iniciales y finales
+        public Posicion Posicion { get; set; }
+        public EstadoBarco Estado { get; set; }
         public int ImpactosPendientes { get; set; }
 
         private Coordenada[] _disparos; 
@@ -12,6 +16,8 @@ namespace HundirLaFlota
         {
             this.Length = length;
             this.ImpactosPendientes = length;
+            this.Estado = EstadoBarco.Indemne;
+
             _disparos = new Coordenada[length];
         }
 

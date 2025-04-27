@@ -106,10 +106,14 @@ namespace HundirLaFlota
                 //Comprobamos si solo está tocado o está totalmente hundido
                 if (barco.EstaHundido())
                 {
+                    // Cambiamos el estado
+                    barco.Estado = EstadoBarco.Hundido;
                     return ResultadoDisparo.Hundido;
                 }
                 else
                 {
+                    // Cambiamos el estado
+                    barco.Estado = EstadoBarco.Tocado;
                     return ResultadoDisparo.Tocado;
                 }
             }
