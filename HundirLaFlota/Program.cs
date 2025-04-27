@@ -2,168 +2,168 @@
 {
     internal class Program
     {
+        private const int NUM_BARCOS_A_HUNDIR = 5;
         private static Tablero tableroJ1 = new(10, 10);  //No está preparada la app para otros valores
         private static Tablero tableroJ2 = new Tablero(10, 10);  //No está preparada la app para otros valores
+        private static int barcosHundidosPorJ1 = 0;
+        private static int barcosHundidosPorJ2 = 0;
         static void Main(string[] args)
         {
             // FASE 1 - Colocación de barcos
 
             // Empieza a colocar el player 1
+
+            Console.WriteLine("Empieza a colocar el player 1");
             if (!CrearBarcosEnTablero(tableroJ1))
             {
                 //Habría que repetir la intro de todos los barcos => Mejorable pero no en esta version, que asumimos que la entrada es correcta
             }
 
             // Empieza a colocar el player 2
+            Console.WriteLine("Empieza a colocar el player 2");
             if (!CrearBarcosEnTablero(tableroJ2))
             {
                 //Habría que repetir la intro de todos los barcos => Mejorable pero no en esta version, que asumimos que la entrada es correcta
             }
 
             // FASE 2 - La guerra
-            if (!War())
+            Guerra();
+
+            // FASE 3 - Resultado
+            if (barcosHundidosPorJ1 == NUM_BARCOS_A_HUNDIR)
             {
-                // Ha acabado la guerra por algún motivo
+                Console.WriteLine("¡Ganó J1!");
             }
-            // Dispara player-1
-            // se mira en el tablero-2 el valor que hay (agua/tocado)
-            // se cambia el valor del tablero-2 al estado (aguatocado / barcotocado)
-        }
-
-        private static bool War()
-        {
-            while(true)
+            if (barcosHundidosPorJ2 == NUM_BARCOS_A_HUNDIR)
             {
-                Console.WriteLine("Jugador 1... Dispara!");
-                Coordenada shoot = GetPointFromConsole();
-                ResultadoDisparo result = tableroJ2.GetShootResult(shoot);
-
+                Console.WriteLine("¡Ganó J2!");
             }
         }
-
         private static bool CrearBarcosEnTablero(Tablero tablero)
         {
+            tablero.PrintTablero(true);
+
             // Generamos el barco de Cinco fichas
             Console.WriteLine("Vamos a crear el barco de longitud CINCO! ");
-            // Pedimos coordenadas iniciales del barco
-            Console.WriteLine("En qué coordenadas empieza? ");
-            Coordenada inicio = GetPointFromConsole();
-            // Pedimos coordenadas finales del barco
-            Console.WriteLine("En qué coordenadas termina? ");
-            Coordenada fin = GetPointFromConsole();
-
-            Barco BarcoDeCinco = new Barco(5);
-            
-            if (!tablero.IntentaColocar(BarcoDeCinco, inicio, fin))
-            {
-                Console.WriteLine("Algo falló"); //ERROR
-                return false;
-            }
+            Barco barcoDeCinco = new Barco(5);
+            PosicionaBarcoEnTablero(tablero, barcoDeCinco);
 
             // Generamos el barco de Cuatro fichas
             Console.WriteLine("Vamos a crear el barco de longitud CUATRO! ");
-            // Pedimos coordenadas iniciales del barco
-            Console.WriteLine("En qué coordenadas empieza? ");
-            inicio = GetPointFromConsole();
-            // Pedimos coordenadas finales del barco
-            Console.WriteLine("En qué coordenadas termina? ");
-            fin = GetPointFromConsole();
-
-            Barco BarcoDeCuatro = new Barco(4);
-            if (!tablero.IntentaColocar(BarcoDeCuatro, inicio, fin))
-            {
-                Console.WriteLine("Algo falló"); //ERROR
-                return false;
-            }
+            Barco barcoDeCuatro = new Barco(4);
+            PosicionaBarcoEnTablero(tablero, barcoDeCuatro);
 
             // Generamos DOS barcos de Tres fichas
             Console.WriteLine("Vamos a crear el primer barco de longitud TRES! ");
-            // Pedimos coordenadas iniciales del barco
-            Console.WriteLine("En qué coordenadas empieza? ");
-            inicio = GetPointFromConsole();
-            // Pedimos coordenadas finales del barco
-            Console.WriteLine("En qué coordenadas termina? ");
-            fin = GetPointFromConsole();
-
-            Barco BarcoDeTres1 = new Barco(3);
-            if (!tablero.IntentaColocar(BarcoDeTres1, inicio, fin))
-            {
-                Console.WriteLine("Algo falló"); //ERROR
-                return false;
-            }
-
+            Barco barcoDeTres1 = new Barco(3);
+            PosicionaBarcoEnTablero(tablero, barcoDeTres1);
             Console.WriteLine("Vamos a crear el segundo barco de longitud TRES! ");
-            // Pedimos coordenadas iniciales del barco
-            Console.WriteLine("En qué coordenadas empieza? ");
-            inicio = GetPointFromConsole();
-            // Pedimos coordenadas finales del barco
-            Console.WriteLine("En qué coordenadas termina? ");
-            fin = GetPointFromConsole();
-
-            Barco BarcoDeTres2 = new Barco(3);
-            if (!tablero.IntentaColocar(BarcoDeTres2, inicio, fin))
-            {
-                Console.WriteLine("Algo falló"); //ERROR
-                return false;
-            }
+            Barco barcoDeTres2 = new Barco(3);
+            PosicionaBarcoEnTablero(tablero, barcoDeTres2);
 
             // Generamos el barco de Dos fichas
             Console.WriteLine("Vamos a crear el barco de longitud DOS! ");
-            // Pedimos coordenadas iniciales del barco
-            Console.WriteLine("En qué coordenadas empieza? ");
-            inicio = GetPointFromConsole();
-            // Pedimos coordenadas finales del barco
-            Console.WriteLine("En qué coordenadas termina? ");
-            fin = GetPointFromConsole();
+            Barco barcoDeDos = new Barco(2);
+            PosicionaBarcoEnTablero(tablero, barcoDeDos);
 
-            Barco BarcoDeDos = new Barco(2);
-            if (!tablero.IntentaColocar(BarcoDeDos, inicio, fin))
-            {
-                Console.WriteLine("Algo falló"); //ERROR
-                return false;
-            }
-
-            PrintTablero(tablero.GetTablero());
+            tablero.PrintTablero();
             return true;
         }
 
-        private static void PrintTablero(Estado[,] tablero)
+        private static void PosicionaBarcoEnTablero(Tablero tablero, Barco barco)
         {
-            for (int j = 0; j < 9; j++)
+            bool posicionFactible = false;
+            Coordenada inicio = null;
+            Coordenada fin = null;
+
+            while (!posicionFactible)
             {
-                for (int i = 0; i < 9; i++)
-                {
-                    Console.WriteLine(tablero[i, j] + "    ");
-                }
-                Console.Write("");
+                // Pedimos coordenadas iniciales del barco
+                Console.WriteLine("En qué coordenadas empieza? ");
+                inicio = CapturaCoordenadaDeLaConsola();
+                // Pedimos coordenadas finales del barco
+                Console.WriteLine("En qué coordenadas termina? ");
+                fin = CapturaCoordenadaDeLaConsola();
+
+                posicionFactible = tablero.IntentaColocar(barco, inicio, fin);
             }
-            Console.Read();
+            tablero.Coloca(barco, inicio, fin);
         }
 
-        private static Coordenada GetPointFromConsole()
+        private static void Guerra()
         {
-            string? coordenadaFromConsole = Console.ReadLine();
-
-            // Debe ser dos caracteres
-            // El primero debe estar entre la A y la J
-            // Se permiten minúsculas (no es case-sensitive)
-            if (coordenadaFromConsole?.Length != 2)
+            while(barcosHundidosPorJ1!= NUM_BARCOS_A_HUNDIR && barcosHundidosPorJ2 != NUM_BARCOS_A_HUNDIR) // se podría hacer con tableroJ1.QuedanBarcosAFlote()
             {
-                return new Coordenada(-1, -1); // ERROR
+                Console.WriteLine("Jugador 1... Dispara!");
+                Coordenada shoot = CapturaCoordenadaDeLaConsola();
+                ResultadoDisparo result = tableroJ2.ResultadoDelDisparo(shoot);
+                ImprimeResultado(result);
+                if (result == ResultadoDisparo.Hundido)
+                {
+                    barcosHundidosPorJ1++;
+                }
+
+                //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
+                Console.WriteLine("Jugador 2... Dispara!");
+                shoot = CapturaCoordenadaDeLaConsola();
+                result = tableroJ1.ResultadoDelDisparo(shoot);
+                ImprimeResultado(result);
+                if (result == ResultadoDisparo.Hundido)
+                {
+                    barcosHundidosPorJ2++;
+                }
             }
+        }
 
-            char PrimerCaracter = coordenadaFromConsole.ToUpper()[0]; // Estamos asumiendo que es mayúscula
-            char SegundoCaracter = coordenadaFromConsole[1];
-
-            // Verificamos que está en [A-J]
-            if (PrimerCaracter < 65 || PrimerCaracter > 75)
+        private static void ImprimeResultado(ResultadoDisparo result)
+        {
+            switch (result)
             {
-                return new Coordenada(-1, -1); // ERROR
+                case ResultadoDisparo.Agua:
+                    {
+                        Console.WriteLine("¡AGUA!");
+                        break;
+                    }
+                case ResultadoDisparo.Tocado:
+                    {
+                        Console.WriteLine("¡TOCADO!");
+                        break;
+                    }
+                case ResultadoDisparo.Hundido:
+                    {
+                        Console.WriteLine("¡HUNDIDO!");
+                        break;
+                    }
+                default:
+                    {
+                        Console.WriteLine("ERROR");
+                        break;
+                    }
             }
-            // Verificamos que está en [0-9]
-            if (SegundoCaracter < 48 || SegundoCaracter > 57)
+        }
+        private static Coordenada CapturaCoordenadaDeLaConsola()
+        {
+            bool rangoXOk = false;
+            bool rangoYOk = false;
+            char PrimerCaracter ='\0';
+            char SegundoCaracter = '\0';
+
+            while (!rangoXOk || !rangoYOk)
             {
-                return new Coordenada(-1, -1); // ERROR
+                string? coordenadaFromConsole = Console.ReadLine();
+
+                // Debe ser dos caracteres
+                if (coordenadaFromConsole?.Length == 2)
+                {
+                    PrimerCaracter = coordenadaFromConsole.ToUpper()[0];
+                    SegundoCaracter = coordenadaFromConsole[1];
+                }
+
+                // Verificamos que está en [A-J]
+                rangoXOk = PrimerCaracter > 64 && PrimerCaracter < 76;
+
+                // Verificamos que está en [0-9]
+                rangoYOk = SegundoCaracter > 47 && SegundoCaracter < 58;
             }
 
             return new Coordenada(Convert.ToInt32(PrimerCaracter) - 65, Convert.ToInt32(SegundoCaracter) - 48);

@@ -1,62 +1,65 @@
-﻿namespace HundirLaFlota
+﻿using System.Runtime.InteropServices.JavaScript;
+
+namespace HundirLaFlota
 {
     internal class Tablero
     {
-        private readonly Estado[,] _tablero;
+        private readonly Barco[,] _tablero;
 
         public Tablero(int v1, int v2)
         {
-            _tablero = new Estado [v1, v2];
+            _tablero = new Barco [v1, v2];
         }
 
         public bool IntentaColocar(Barco barco, Coordenada inicio, Coordenada fin)
         {
-            int horizontalSize = Math.Abs(inicio.x - fin.x);
-            int verticalSize = Math.Abs(inicio.y - fin.y);
+            int rangoLetras = Math.Abs(inicio.x - fin.x);
+            int rangoNumeros = Math.Abs(inicio.y - fin.y);
 
             // uno y solo uno de los dos valores debe ser cero
-            if (horizontalSize * verticalSize != 0)
+            if (rangoNumeros * rangoLetras != 0)
             {
+                Console.WriteLine("Los barcos solo pueden colocarse horizontalmente o verticalmente");
                 return false;
             }
-            if (horizontalSize + verticalSize == 0)
+            if (rangoNumeros + rangoLetras == 0)
             {
+                Console.WriteLine("El rango no coincide con las dimensiones del barco");
                 return false;
             }
 
             // Debe coincidir el tamaño del barco con las coordenadas 
-            if (barco.Length -1 != horizontalSize + verticalSize)
+            if (barco.Length -1 != rangoNumeros + rangoLetras)
             {
+                Console.WriteLine("El rango no coincide con las dimensiones del barco");
                 return false;
             }
 
             // Marcamos el barco en el tablero en horizontal o vertical
-            if (horizontalSize > 0)
+            if (rangoLetras > 0)
             {
-                //Si hay ya algún barco en ese rango, no se puede superponer el nuevo, dicho de otra forma: todo el rango debe ser AGUA
-
-                for (int i = inicio.x; i <= fin.x; i++)
+                // usamos min y max por si el usuario ha introducido los rangos al revés de lo esperable
+                int min = Math.Min(inicio.x, fin.x);
+                int max = Math.Max(inicio.x, fin.x);
+                for (int i = min; i <= max; i++)
                 {
-                    if (_tablero[i, fin.y] == Estado.Agua)
+                    //Si hay ya algún barco en ese rango, no se puede superponer el nuevo
+                    if (_tablero[i, fin.y] != null)
                     {
-                        _tablero[i, fin.y] = Estado.Barco;
-                    }
-                    else 
-                    { 
+                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({i},{fin.y})");
                         return false; 
                     }
                 }
             }
             else
             {
-                for (int i = inicio.y; i <= fin.y; i++)
+                int min = Math.Min(inicio.y, fin.y);
+                int max = Math.Max(inicio.y, fin.y);
+                for (int i = min; i <= max; i++)
                 {
-                    if (_tablero[fin.x, i] == Estado.Agua)
+                    if (_tablero[fin.x, i] != null)
                     {
-                        _tablero[fin.x, i] = Estado.Barco;
-                    }
-                    else
-                    {
+                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({fin.x},{i})");
                         return false;
                     }
                 }
@@ -65,28 +68,43 @@
             return true;
         }
 
-        public Estado[,] GetTablero()
+        internal void Coloca(Barco barco, Coordenada inicio, Coordenada fin)
         {
-            return _tablero;
+            int rangoLetras = Math.Abs(inicio.x - fin.x);
+            // Marcamos el barco en el tablero en horizontal o vertical
+            if (rangoLetras > 0)
+            {
+                // usamos min y max por si el usuario ha introducido los rangos al revés de lo esperable
+                int min = Math.Min(inicio.x, fin.x);
+                int max = Math.Max(inicio.x, fin.x);
+                for (int i = min; i <= max; i++)
+                {
+                    _tablero[i, fin.y] = barco;
+                }
+            }
+            else
+            {
+                int min = Math.Min(inicio.y, fin.y);
+                int max = Math.Max(inicio.y, fin.y);
+                for (int i = min; i <= max; i++)
+                {
+                    _tablero[fin.x, i] = barco;
+                }
+            }
         }
 
-        internal ResultadoDisparo GetShootResult(Coordenada shoot)
+        internal ResultadoDisparo ResultadoDelDisparo(Coordenada shoot)
         {
-            if (_tablero[shoot.x, shoot.y].Equals(Estado.Agua))
-            {
-                //Anotamos el disparo y devolvemos
-                _tablero[shoot.x, shoot.y] = Estado.AguaTocada;
-                return ResultadoDisparo.Agua;
-            }
+            // recuperamos el barco que está en esa posición (si hay alguno)
+            Barco barco = _tablero[shoot.x, shoot.y];
 
-            if (_tablero[shoot.x, shoot.y].Equals(Estado.Barco))
+            if (barco != null)
             {
                 //Anotamos el disparo y devolvemos
-                _tablero[shoot.x, shoot.y] = Estado.BarcoTocado;
-                // recuperamos el barco que está en esa posición
-                Barco barco = _tablero[shoot.x, shoot.y];
+                barco.Tocado(shoot);
+
                 //Comprobamos si solo está tocado o está totalmente hundido
-                if (barco.hundido)
+                if (barco.EstaHundido())
                 {
                     return ResultadoDisparo.Hundido;
                 }
@@ -95,8 +113,56 @@
                     return ResultadoDisparo.Tocado;
                 }
             }
-            //Si todo ha ido bien, aquí no debe llegar
+
             return ResultadoDisparo.Agua;
+        }
+        public bool QuedanBarcosAFlote()
+        {
+            for (int j = 0; j < 10; j++)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    Barco barco = _tablero[i, j];
+                    if (barco != null)
+                    {
+                        if (!barco.EstaHundido())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public void PrintTablero(bool imprimeVacio = false)
+        {
+            Console.WriteLine("     0    1    2    3    4    5    6    7    8    9");
+            for (int i = 0; i < 10; i++)
+            {
+                Console.Write((char)(65 + i) + "  ");
+                for (int j = 0; j < 10; j++)
+                {
+                    Barco barco = _tablero[i, j];
+                    if (barco != null && !imprimeVacio)
+                    {
+                        Console.Write(" |X| ");
+                    }
+                    else
+                    {
+                        Console.Write(" | | ");
+                    }
+                }
+                Console.WriteLine("");
+            }
+
+            if (!imprimeVacio)
+            {
+                Console.WriteLine("Esta es tu configuración. Pulsa una tecla para borrrarla de la pantalla");
+                Console.ReadLine();
+                Console.Clear();
+            }
         }
     }
 }
