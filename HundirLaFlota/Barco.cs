@@ -2,7 +2,7 @@
 
 namespace HundirLaFlota
 {
-    internal class Barco
+    public class Barco
     {
         public int Length { get; }
 
@@ -21,7 +21,7 @@ namespace HundirLaFlota
             _disparos = new Coordenada[length];
         }
 
-        internal void Tocado(Coordenada shoot)
+        public void Tocado(Coordenada shoot)
         {
             // No debe estar ya hundido
             if( this.EstaHundido())

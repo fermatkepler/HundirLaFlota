@@ -16,27 +16,27 @@ namespace HundirLaFlota
             Console.WriteLine("HUNDIR LA FLOTA");
             Console.WriteLine("---------------");
 
-            Console.WriteLine("1 -> Jugar contra otro jugador");
-            Console.WriteLine("2 -> Jugar contra el ordenador");
-            Console.WriteLine("Elige una opción:");
-
             while (!opcionValida)
             {
+                Console.WriteLine("1 -> Jugar contra otro jugador");
+                Console.WriteLine("2 -> Jugar contra el ordenador");
+                Console.WriteLine("Elige una opción:");
+
                 opcion = Console.ReadLine();
 
                 if (opcion == "1" || opcion == "2")
                 {
-                    opcionValida = true;
+                    Console.Clear();
+                    if (opcion == "1")
+                    {
+                        VersusPlayer();
+                    }
+                    else
+                    {
+                        VersusIA();
+                    }
+                    //opcionValida = true;
                 }
-            }
-
-            if (opcion=="1")
-            {
-                VersusPlayer();
-            }
-            else
-            {
-                VersusIA();
             }
         }
 
@@ -60,14 +60,18 @@ namespace HundirLaFlota
             Guerra(true);
 
             // FASE 3 - Resultado
+            Console.WriteLine();
+            Console.WriteLine("*************");
             if (barcosHundidosPorJ1 == NUM_BARCOS_A_HUNDIR)
             {
-                Console.WriteLine("¡Ganó J1!");
+                Console.WriteLine("* ¡Ganó J1! *");
             }
             if (barcosHundidosPorJ2 == NUM_BARCOS_A_HUNDIR)
             {
-                Console.WriteLine("¡Ganó J2!");
+                Console.WriteLine("* ¡Ganó J2! *");
             }
+            Console.WriteLine("*************");
+            Console.WriteLine();
         }
 
         private static void VersusPlayer()
@@ -110,6 +114,8 @@ namespace HundirLaFlota
 
             while (barcosHundidosPorJ1 != NUM_BARCOS_A_HUNDIR && barcosHundidosPorJ2 != NUM_BARCOS_A_HUNDIR) // se podría hacer con tableroJ1.QuedanBarcosAFlote()
             {
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
                 Console.WriteLine("Jugador 1... ");
                 var resultados = EleccionArmaContra(tableroJ2);
                 foreach (var resultado in resultados)
@@ -121,6 +127,7 @@ namespace HundirLaFlota
                 }
 
                 //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
+                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
                 Console.WriteLine("Jugador 2... ");
                 //El segundo jugador puede disparar como IA si se ha requerido así
                 if (soyIA)
@@ -139,6 +146,7 @@ namespace HundirLaFlota
                     }
                     else
                     {
+                        // La IA solo recuerda el disparo tras un acierto
                         buenDisparo = null;
                     }
                 }
@@ -181,20 +189,18 @@ namespace HundirLaFlota
                 case "N":
                     {
                         return DisparoNormal(tablero);
-                        break;
                     }
                 case "S":
                     {
                         return SuperDisparo(tablero);
-                        break;
                     }
                 case "D":
                     {
-                        break;
+                        return DisparoDoble(tablero);
                     }
                 case "R":
                     {
-                        break;
+                        return Radar(tablero);
                     }
                 default:
                     {
@@ -205,9 +211,67 @@ namespace HundirLaFlota
             return new List<ResultadoDisparo>();
         }
 
+        private static List<ResultadoDisparo> Radar(Tablero tablero)
+        {
+            var resultados = new List<ResultadoDisparo>();
+
+            Console.WriteLine("Mira!");
+            tablero.PrintTablero();
+            Thread.Sleep(1000);
+            Console.Clear();
+
+            return resultados;
+        }
+
+        private static List<ResultadoDisparo> DisparoDoble(Tablero tablero)
+        {
+            var resultados = DisparoNormal(tablero);
+            var result1 = DisparoNormal(tablero);
+
+            foreach (var result in result1)
+            {
+                resultados.Add(result);
+            }
+
+            return resultados;
+        }
+
         private static List<ResultadoDisparo> SuperDisparo(Tablero tablero)
         {
-            throw new NotImplementedException();
+            Coordenada shoot;
+            var resultados = new List<ResultadoDisparo>();
+
+            Console.WriteLine("Dispara!");
+
+            // Las coordenadas son de la casilla central de la cruz del super-disparo. Se pierden los disparos fuera de rango
+            shoot = CapturaCoordenadaDeLaConsola();
+            Console.WriteLine($"Ensayando Super-Disparo con centro de cruz ({(char)(shoot.x + 65)}{shoot.y})");
+
+            ResultadoDisparo result = tablero.ResultadoDelDisparo(shoot);
+            ImprimeResultado(result);
+            resultados.Add(result);
+
+            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 1 + 65)}{shoot.y})");
+            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x + 1, shoot.y));
+            ImprimeResultado(result);
+            resultados.Add(result);
+
+            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x - 1 + 65)}{shoot.y})");
+            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x - 1, shoot.y));
+            ImprimeResultado(result);
+            resultados.Add(result);
+
+            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y + 1})");
+            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x, shoot.y + 1));
+            ImprimeResultado(result);
+            resultados.Add(result);
+
+            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y - 1})");
+            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x, shoot.y - 1));
+            ImprimeResultado(result);
+            resultados.Add(result);
+
+            return resultados;
         }
 
         private static List<ResultadoDisparo> DisparoNormal(Tablero tablero)
@@ -230,34 +294,41 @@ namespace HundirLaFlota
 
         private static bool CrearBarcosEnTablero(Tablero tablero, bool soyIA = false)
         {
-            tablero.PrintTablero(true);
+            if (!soyIA)
+            {
+                tablero.PrintTablero(true);
+            }
 
             // Generamos el barco de Cinco fichas
-            Console.WriteLine("Vamos a crear el barco de longitud CINCO! ");
+            Console.WriteLine("Creación del barco de longitud CINCO! ");
             Barco barcoDeCinco = new Barco(5);
             PosicionaBarcoEnTablero(tablero, barcoDeCinco, soyIA);
 
             // Generamos el barco de Cuatro fichas
-            Console.WriteLine("Vamos a crear el barco de longitud CUATRO! ");
+            Console.WriteLine("Creación del barco de longitud CUATRO! ");
             Barco barcoDeCuatro = new Barco(4);
             PosicionaBarcoEnTablero(tablero, barcoDeCuatro, soyIA);
 
             //// Generamos DOS barcos de Tres fichas
-            //Console.WriteLine("Vamos a crear el primer barco de longitud TRES! ");
+            //Console.WriteLine("Creación del primer barco de longitud TRES! ");
             //Barco barcoDeTres1 = new Barco(3);
             //PosicionaBarcoEnTablero(tablero, barcoDeTres1, soyIA);
-            //Console.WriteLine("Vamos a crear el segundo barco de longitud TRES! ");
+            //Console.WriteLine("Creación del segundo barco de longitud TRES! ");
             //Barco barcoDeTres2 = new Barco(3);
             //PosicionaBarcoEnTablero(tablero, barcoDeTres2, soyIA);
 
             //// Generamos el barco de Dos fichas
-            //Console.WriteLine("Vamos a crear el barco de longitud DOS! ");
+            //Console.WriteLine("Creación del barco de longitud DOS! ");
             //Barco barcoDeDos = new Barco(2);
             //PosicionaBarcoEnTablero(tablero, barcoDeDos, soyIA);
 
             if (!soyIA)
             {
                 tablero.PrintTablero();
+
+                Console.WriteLine("Esta es tu configuración. Pulsa <ENTER> para borrrarla de la pantalla");
+                Console.ReadLine();
+                Console.Clear();
             }
 
             return true;
@@ -327,7 +398,7 @@ namespace HundirLaFlota
             Coordenada inicio = null;
             Coordenada fin = null;
 
-            Random random = new Random();
+            Random random = new Random(DateTime.Now.Microsecond);
             bool esVertical = random.Next(2) > 1;
             int comienza = random.Next(10 - barco.Length);
             int filaColumna = random.Next(10);
@@ -368,7 +439,7 @@ namespace HundirLaFlota
             if (buenDisparo != null) //con esta coordenada se tocó un barco enemigó
             {
                 //Aleatorizamos sumando o restando uno a la coordenada vertical o a la horizontal (a la vez no!)
-                Random random = new Random();
+                Random random = new Random(DateTime.Now.Microsecond);
                 bool esVertical = random.Next(2) > 1;
                 if (esVertical)
                 {
@@ -421,7 +492,7 @@ namespace HundirLaFlota
             }
             else
             {
-                Random random = new Random();
+                Random random = new Random(DateTime.Now.Microsecond);
                 nuevaX = random.Next(10);
                 nuevaY = random.Next(10);
                 return new Coordenada(nuevaX, nuevaY);

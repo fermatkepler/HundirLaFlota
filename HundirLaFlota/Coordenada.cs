@@ -28,7 +28,8 @@ namespace HundirLaFlota
     {
         Agua = 0,
         Tocado,
-        Hundido
+        Hundido, 
+        NoValido
     }
 
     public enum Posicion

@@ -2,7 +2,7 @@
 
 namespace HundirLaFlota
 {
-    internal class Tablero
+    public class Tablero
     {
         private readonly Barco[,] _tablero;
 
@@ -46,7 +46,7 @@ namespace HundirLaFlota
                     //Si hay ya algún barco en ese rango, no se puede superponer el nuevo
                     if (_tablero[i, fin.y] != null)
                     {
-                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({i},{fin.y})");
+                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65+i)},{fin.y})");
                         return false; 
                     }
                 }
@@ -59,7 +59,7 @@ namespace HundirLaFlota
                 {
                     if (_tablero[fin.x, i] != null)
                     {
-                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({fin.x},{i})");
+                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65 + fin.x)},{i})");
                         return false;
                     }
                 }
@@ -68,7 +68,7 @@ namespace HundirLaFlota
             return true;
         }
 
-        internal void Coloca(Barco barco, Coordenada inicio, Coordenada fin)
+        public void Coloca(Barco barco, Coordenada inicio, Coordenada fin)
         {
             int rangoLetras = Math.Abs(inicio.x - fin.x);
             // Marcamos el barco en el tablero en horizontal o vertical
@@ -93,8 +93,13 @@ namespace HundirLaFlota
             }
         }
 
-        internal ResultadoDisparo ResultadoDelDisparo(Coordenada shoot)
+        public ResultadoDisparo ResultadoDelDisparo(Coordenada shoot)
         {
+            // validamos las coordenadas pedidas
+            if (shoot.x < 0 || shoot.x > 9 || shoot.y < 0 || shoot.y > 9)
+            {
+                return ResultadoDisparo.NoValido;
+            }
             // recuperamos el barco que está en esa posición (si hay alguno)
             Barco barco = _tablero[shoot.x, shoot.y];
 
@@ -120,6 +125,7 @@ namespace HundirLaFlota
 
             return ResultadoDisparo.Agua;
         }
+
         public bool QuedanBarcosAFlote()
         {
             for (int j = 0; j < 10; j++)
@@ -159,13 +165,6 @@ namespace HundirLaFlota
                     }
                 }
                 Console.WriteLine("");
-            }
-
-            if (!imprimeVacio)
-            {
-                Console.WriteLine("Esta es tu configuración. Pulsa una tecla para borrrarla de la pantalla");
-                Console.ReadLine();
-                Console.Clear();
             }
         }
     }
