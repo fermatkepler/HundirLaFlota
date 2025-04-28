@@ -5,10 +5,25 @@ namespace HundirLaFlota
     public class Tablero
     {
         private readonly Barco[,] _tablero;
+        private readonly List<Barco> _barcos;
 
-        public Tablero(int v1, int v2)
+        public string Nombre {get; }
+
+        public int UltimoSuperDisparo { get; set; }
+
+        public int UltimoDisparoDoble { get; set; }
+
+        public int UltimoRadar { get; set; }
+
+        public int FallosConsecutivos { get; set; }
+
+        public int BarcosHundidosAlRival { get; set; }
+
+        public Tablero(string nombre)
         {
-            _tablero = new Barco [v1, v2];
+            Nombre = nombre;
+            _tablero = new Barco [10, 10];
+            _barcos = new List<Barco>();
         }
 
         public bool IntentaColocar(Barco barco, Coordenada inicio, Coordenada fin)
@@ -72,7 +87,7 @@ namespace HundirLaFlota
         {
             int rangoLetras = Math.Abs(inicio.x - fin.x);
             // Marcamos el barco en el tablero en horizontal o vertical
-            if (rangoLetras > 0)
+            if (rangoLetras > 0) // Horizontal
             {
                 // usamos min y max por si el usuario ha introducido los rangos al revés de lo esperable
                 int min = Math.Min(inicio.x, fin.x);
@@ -91,6 +106,8 @@ namespace HundirLaFlota
                     _tablero[fin.x, i] = barco;
                 }
             }
+            // Guardamos el barco en una lista de barcos propios para ver rápidamente cuáles están hundidos
+            _barcos.Add(barco);
         }
 
         public ResultadoDisparo ResultadoDelDisparo(Coordenada shoot)
@@ -108,6 +125,9 @@ namespace HundirLaFlota
                 //Anotamos el disparo y devolvemos
                 barco.Tocado(shoot);
 
+                //Inicializamos los fallos consecutivos
+                FallosConsecutivos = 0;
+
                 //Comprobamos si solo está tocado o está totalmente hundido
                 if (barco.EstaHundido())
                 {
@@ -123,6 +143,7 @@ namespace HundirLaFlota
                 }
             }
 
+            FallosConsecutivos++;
             return ResultadoDisparo.Agua;
         }
 
@@ -133,12 +154,9 @@ namespace HundirLaFlota
                 for (int i = 0; i < 10; i++)
                 {
                     Barco barco = _tablero[i, j];
-                    if (barco != null)
+                    if (barco != null && !barco.EstaHundido())
                     {
-                        if (!barco.EstaHundido())
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
@@ -166,6 +184,18 @@ namespace HundirLaFlota
                 }
                 Console.WriteLine("");
             }
+        }
+
+        public bool EstaHundidoAlgunBarcoDe(int longitud)
+        {
+            foreach (Barco barco in _barcos)
+            {
+                if (barco.Length == longitud)
+                {
+                    return barco.EstaHundido();
+                }
+            }
+            return true;
         }
     }
 }
