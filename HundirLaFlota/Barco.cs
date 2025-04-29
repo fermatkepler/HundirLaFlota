@@ -21,33 +21,51 @@ namespace HundirLaFlota
             _disparos = new Coordenada[length];
         }
 
-        public void Tocado(Coordenada shoot)
+        public ResultadoDisparo Tocado(Coordenada shoot)
         {
-            // No debe estar ya hundido
-            if( this.EstaHundido())
+            // No debe estar ya hundido. Tal vez se debería contar como fallo un disparo a un barco hundido... no lo haremos
+            if (this.EstaHundido())
             {
-                return;
+                return ResultadoDisparo.NoValido;
             }
-            // Verificamos que no ha repetido disparo en esa coordenada
+            // Verificamos que no ha repetido disparo en esa coordenada. Tal vez se debería contar como fallo un disparo repetido... no lo haremos
             if (YaDisparado(shoot))
             {
-                return;
+                return ResultadoDisparo.NoValido;
             }
 
             // Almacenamos la coordenada que le dio, para que no la pueda repetir
-            _disparos[ImpactosPendientes-1] = shoot;
+            _disparos[ImpactosPendientes - 1] = shoot;
 
             // le queda un impacto menos para hundirse
             ImpactosPendientes--;
+
+            //Comprobamos si solo está tocado o está totalmente hundido
+            if (this.EstaHundido())
+            {
+                // Cambiamos el estado
+                this.Estado = EstadoBarco.Hundido;
+                return ResultadoDisparo.Hundido;
+            }
+            else
+            {
+                // Cambiamos el estado
+                this.Estado = EstadoBarco.Tocado;
+                return ResultadoDisparo.Tocado;
+            }
         }
 
         private bool YaDisparado(Coordenada shoot)
         {
             for (int i = Length-1; i > 0; i--)
             {
-                if (_disparos[i]!= null && _disparos[i] == shoot)
+                if (_disparos[i]!= null)
                 {
-                    return true;
+                    // Comparamos los valores de las propiedades de los objetos a comparar
+                    if (_disparos[i].x == shoot.x && _disparos[i].y == shoot.y)
+                    {
+                        return true;
+                    }
                 }
             }
 

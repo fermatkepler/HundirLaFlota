@@ -26,7 +26,7 @@ namespace HundirLaFlota
             _barcos = new List<Barco>();
         }
 
-        public bool IntentaColocar(Barco barco, Coordenada inicio, Coordenada fin)
+        public bool IntentaColocar(Barco barco, Coordenada inicio, Coordenada fin, bool soyIA = false)
         {
             int rangoLetras = Math.Abs(inicio.x - fin.x);
             int rangoNumeros = Math.Abs(inicio.y - fin.y);
@@ -61,7 +61,10 @@ namespace HundirLaFlota
                     //Si hay ya algún barco en ese rango, no se puede superponer el nuevo
                     if (_tablero[i, fin.y] != null)
                     {
-                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65+i)},{fin.y})");
+                        if (!soyIA)
+                        {
+                            Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65 + i)},{fin.y})");
+                        }
                         return false; 
                     }
                 }
@@ -74,7 +77,10 @@ namespace HundirLaFlota
                 {
                     if (_tablero[fin.x, i] != null)
                     {
-                        Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65 + fin.x)},{i})");
+                        if (!soyIA)
+                        {
+                            Console.WriteLine($"Hay ya otro barco ocupando la posición ({(char)(65 + fin.x)},{i})");
+                        }
                         return false;
                     }
                 }
@@ -122,25 +128,15 @@ namespace HundirLaFlota
 
             if (barco != null)
             {
-                //Anotamos el disparo y devolvemos
-                barco.Tocado(shoot);
-
-                //Inicializamos los fallos consecutivos
-                FallosConsecutivos = 0;
-
-                //Comprobamos si solo está tocado o está totalmente hundido
-                if (barco.EstaHundido())
+                //Anotamos el disparo, con lo que si es válido (no se ha repetido el tiro ni estaba hundido), reiniciamos los fallos consecutivos
+                var resultado = barco.Tocado(shoot);
+                if (resultado!=ResultadoDisparo.NoValido)
                 {
-                    // Cambiamos el estado
-                    barco.Estado = EstadoBarco.Hundido;
-                    return ResultadoDisparo.Hundido;
+                    //Inicializamos los fallos consecutivos
+                    FallosConsecutivos = 0;
                 }
-                else
-                {
-                    // Cambiamos el estado
-                    barco.Estado = EstadoBarco.Tocado;
-                    return ResultadoDisparo.Tocado;
-                }
+                // Tal vez se debería contar como fallo un disparo no válido... no lo haremos
+                return resultado;
             }
 
             FallosConsecutivos++;

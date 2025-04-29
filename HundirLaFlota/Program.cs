@@ -2,9 +2,9 @@
 {
     public class Program
     {
-        private const int NUM_BARCOS_A_HUNDIR = 2;
-        private static Tablero tableroJ1 = new Tablero("J1");
-        private static Tablero tableroJ2 = new Tablero("J2");
+        private const int NUM_BARCOS_A_HUNDIR = 5;
+        private static Tablero tableroJ1;
+        private static Tablero tableroJ2;
 
         static void Main(string[] args)
         {
@@ -38,15 +38,29 @@
 
         private static void ComienzoJuego(bool soyIA = false)
         {
+            Console.WriteLine("Eres el primer jugador. ¿Cómo te llamas?");
+            string? j1 = Console.ReadLine();
+            Console.WriteLine($"Empieza a colocar {j1}");
+
             // FASE 1 - Colocación de barcos
 
             // Empieza a colocar el player 1
-
-            Console.WriteLine("Empieza a colocar J1");
+            tableroJ1 = new Tablero(j1);
             CrearBarcosEnTablero(tableroJ1);
 
             // Empieza a colocar el player 2 / la IA
-            Console.WriteLine("Empieza a colocar J2");
+            string? j2;
+            if (soyIA)
+            {
+                j2 = "Elon";
+            }
+            else
+            {
+                Console.WriteLine("Eres el segundo jugador. ¿Cómo te llamas?");
+                j2 = Console.ReadLine();
+            }
+            Console.WriteLine($"Empieza a colocar {j2}.");
+            tableroJ2 = new Tablero(j2);
             CrearBarcosEnTablero(tableroJ2, soyIA);
 
             // FASE 2 - La guerra
@@ -55,11 +69,11 @@
             // FASE 3 - Resultado
             if (tableroJ1.BarcosHundidosAlRival == NUM_BARCOS_A_HUNDIR)
             {
-                PintaEnCuadrado("¡Ganó J1!");
+                PintaEnCuadrado($"¡Ganó {j1}!");
             }
             if (tableroJ2.BarcosHundidosAlRival == NUM_BARCOS_A_HUNDIR)
             {
-                PintaEnCuadrado("¡Ganó J2!");
+                PintaEnCuadrado($"¡Ganó {j2}!");
             }
         }
 
@@ -96,8 +110,6 @@
 
             if (!soyIA)
             {
-                tablero.PrintTablero();
-
                 Console.WriteLine("Esta es tu configuración. Pulsa <ENTER> para borrrarla de la pantalla");
                 Console.ReadLine();
                 Console.Clear();
@@ -131,10 +143,15 @@
                     barco.Posicion = Posicion.Vertical;
                 }
 
-                posicionFactible = tablero.IntentaColocar(barco, inicio, fin);
+                posicionFactible = tablero.IntentaColocar(barco, inicio, fin, soyIA);
             }
 
             tablero.Coloca(barco, inicio, fin);
+
+            if (!soyIA)
+            {
+                tablero.PrintTablero();
+            }
         }
 
         private static void Guerra(bool soyIA = false)
@@ -148,10 +165,9 @@
             {
                 ronda++;
 
-                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
                 PintaEnCuadrado("Ronda " + ronda);
-                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
-                Console.WriteLine("Jugador 1... ");
+                Console.WriteLine($"Turno de {tableroJ1.Nombre}... ");
+                Console.WriteLine();
 
                 var resultados = EleccionArmaContra(tableroJ2, ronda);
 
@@ -165,7 +181,9 @@
 
                 //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
                 Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
-                Console.WriteLine("Jugador 2... ");
+                Console.WriteLine();
+                Console.WriteLine($"Turno de {tableroJ2.Nombre}... ");
+                Console.WriteLine();
                 //El segundo jugador puede disparar como IA si se ha requerido así
                 if (soyIA)
                 {
@@ -219,12 +237,12 @@
                         {
                             if (tablero.EstaHundidoAlgunBarcoDe(5))
                             {
-                                Console.WriteLine($"Tienes el barco de tamaño 5 hundido, no puedes usar SuperDisparo");
+                                Console.WriteLine($"Tiene tu rival el barco de tamaño 5 hundido, no puedes usar SuperDisparo");
                                 opcionValida = false;
                                 break;
                             }
                             // Al comenzar el turno no ha habido un último superdisparo, pero aún así no lo permitimos hasta la tercera ronda
-                            if (ronda - tablero.UltimoSuperDisparo < 3)
+                            if (ronda - tablero.UltimoSuperDisparo - 1 < 3)
                             {
                                 Console.WriteLine($"Todavía debes esperar {4 - (ronda - tablero.UltimoSuperDisparo)} rondas para usar el SuperDisparo");
                                 opcionValida = false;
@@ -238,12 +256,12 @@
                         {
                             if (tablero.EstaHundidoAlgunBarcoDe(4))
                             {
-                                Console.WriteLine($"Tienes el barco de tamaño 4 hundido, no puedes usar Disparo Doble");
+                                Console.WriteLine($"Tiene tu rival el barco de tamaño 4 hundido, no puedes usar Disparo Doble");
                                 opcionValida = false;
                                 break;
                             }
                             // Al comenzar el turno no ha habido un último superdisparo, pero aún así no lo permitimos hasta la segunda ronda
-                            if (ronda - tablero.UltimoDisparoDoble < 2)
+                            if (ronda - tablero.UltimoDisparoDoble - 1 < 2)
                             {
                                 Console.WriteLine($"Todavía debes esperar {3 - (ronda - tablero.UltimoDisparoDoble)} rondas para usar el Disparo Doble");
                                 opcionValida = false;
@@ -257,11 +275,11 @@
                         {
                             if (tablero.EstaHundidoAlgunBarcoDe(2))
                             {
-                                Console.WriteLine($"Tienes el barco de tamaño 2 hundido, no puedes usar Radar");
+                                Console.WriteLine($"Tiene tu rival el barco de tamaño 2 hundido, no puedes usar Radar");
                                 opcionValida = false;
                                 break;
                             }
-                            if (ronda - tablero.FallosConsecutivos < 5)
+                            if (tablero.FallosConsecutivos < 5)
                             {
                                 Console.WriteLine($"Debes fallar {5 - tablero.FallosConsecutivos} rondas adicionales para usar el Radar");
                                 opcionValida = false;
@@ -313,30 +331,21 @@
 
             // Las coordenadas son de la casilla central de la cruz del super-disparo. Se pierden los disparos fuera de rango
             shoot = CapturaCoordenadaDeLaConsola();
-            Console.WriteLine($"Ensayando Super-Disparo con centro de cruz ({(char)(shoot.x + 65)}{shoot.y})");
+            Console.WriteLine($"SUPER-DISPARO con centro de cruz ({(char)(shoot.x + 65)}{shoot.y})");
 
-            ResultadoDisparo result = tablero.ResultadoDelDisparo(shoot);
-            ImprimeResultado(result);
+            ResultadoDisparo result = DisparoBase(tablero, shoot);
             resultados.Add(result);
 
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 1 + 65)}{shoot.y})");
-            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x + 1, shoot.y));
-            ImprimeResultado(result);
+            result = DisparoBase(tablero, new Coordenada(shoot.x + 1, shoot.y));
             resultados.Add(result);
 
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x - 1 + 65)}{shoot.y})");
-            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x - 1, shoot.y));
-            ImprimeResultado(result);
+            result = DisparoBase(tablero, new Coordenada(shoot.x - 1, shoot.y));
             resultados.Add(result);
 
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y + 1})");
-            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x, shoot.y + 1));
-            ImprimeResultado(result);
+            result = DisparoBase(tablero, new Coordenada(shoot.x, shoot.y + 1));
             resultados.Add(result);
 
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y - 1})");
-            result = tablero.ResultadoDelDisparo(new Coordenada(shoot.x, shoot.y - 1));
-            ImprimeResultado(result);
+            result = DisparoBase(tablero, new Coordenada(shoot.x, shoot.y - 1));
             resultados.Add(result);
 
             return resultados;
@@ -347,10 +356,8 @@
             Console.WriteLine("Dispara!");
 
             Coordenada shoot = CapturaCoordenadaDeLaIA(buenDisparo);
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})");
 
-            ResultadoDisparo result = tablero.ResultadoDelDisparo(shoot);
-            ImprimeResultado(result);
+            ResultadoDisparo result = DisparoBase(tablero, shoot);
 
             if (result == ResultadoDisparo.Hundido)
             {
@@ -375,14 +382,20 @@
             Console.WriteLine("Dispara!");
 
             shoot = CapturaCoordenadaDeLaConsola();
-            Console.WriteLine($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})");
 
-            ResultadoDisparo result = tablero.ResultadoDelDisparo(shoot);
-            ImprimeResultado(result);
-
+            ResultadoDisparo result = DisparoBase(tablero, shoot);
             resultados.Add(result);
 
             return resultados;
+        }
+
+        private static ResultadoDisparo DisparoBase(Tablero tablero, Coordenada shoot)
+        {
+            Console.Write($"Ensayando disparo a ({(char)(shoot.x + 65)}{shoot.y})...   ");
+            var result = tablero.ResultadoDelDisparo(shoot);
+            ImprimeResultado(result);
+
+            return result;
         }
 
         private static (Coordenada, Coordenada) CapturaRangoCoordenadasAleatorias(Barco barco)
@@ -544,6 +557,7 @@
                         break;
                     }
             }
+            Console.WriteLine();
         }
 
         private static void PintaEnCuadrado(string texto)
@@ -559,6 +573,7 @@
             {
                 Console.Write("*");
             }
+            Console.WriteLine();
             Console.WriteLine();
         }
     }
