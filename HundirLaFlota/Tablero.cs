@@ -140,6 +140,7 @@ namespace HundirLaFlota
             }
 
             FallosConsecutivos++;
+            // Si es AGUA, no validamos que el tiro sea erróneo por estar repetido. Parece correcto
             return ResultadoDisparo.Agua;
         }
 

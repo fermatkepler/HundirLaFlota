@@ -180,7 +180,7 @@
                 }
 
                 //Incluso si el primer jugador ha hundido todo, el segundo jugador tiene opción a su último disparo para poder empatar
-                Console.WriteLine("--------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("- CAMBIO DE JUGADOR -");
                 Console.WriteLine();
                 Console.WriteLine($"Turno de {tableroJ2.Nombre}... ");
                 Console.WriteLine();
@@ -260,7 +260,7 @@
                                 opcionValida = false;
                                 break;
                             }
-                            // Al comenzar el turno no ha habido un último superdisparo, pero aún así no lo permitimos hasta la segunda ronda
+                            // Al comenzar el turno no ha habido un último disparo doble, pero aún así no lo permitimos hasta la segunda ronda
                             if (ronda - tablero.UltimoDisparoDoble - 1 < 2)
                             {
                                 Console.WriteLine($"Todavía debes esperar {3 - (ronda - tablero.UltimoDisparoDoble)} rondas para usar el Disparo Doble");
@@ -562,7 +562,6 @@
 
         private static void PintaEnCuadrado(string texto)
         {
-            Console.WriteLine();
             for (int i = 0; i < texto.Length + 4; i++)
             {
                 Console.Write("*");
