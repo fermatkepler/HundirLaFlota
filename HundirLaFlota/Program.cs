@@ -81,7 +81,7 @@
         {
             if (!soyIA)
             {
-                tablero.PrintTablero(true);
+                tablero.MuestraTableroBarcos(true);
             }
 
             // Generamos el barco de Cinco fichas
@@ -150,7 +150,7 @@
 
             if (!soyIA)
             {
-                tablero.PrintTablero();
+                tablero.MuestraTableroBarcos();
             }
         }
 
@@ -302,7 +302,7 @@
             var resultados = new List<ResultadoDisparo>();
 
             Console.WriteLine("Mira!");
-            tablero.PrintTablero();
+            tablero.MuestraTableroBarcos();
             Thread.Sleep(1000);
             Console.Clear();
 
@@ -312,9 +312,9 @@
         private static List<ResultadoDisparo> DisparoDoble(Tablero tablero)
         {
             var resultados = DisparoNormal(tablero);
-            var result1 = DisparoNormal(tablero);
+            var resultSiguiente = DisparoNormal(tablero);
 
-            foreach (var result in result1)
+            foreach (var result in resultSiguiente)
             {
                 resultados.Add(result);
             }
@@ -347,6 +347,9 @@
 
             result = DisparoBase(tablero, new Coordenada(shoot.x, shoot.y - 1));
             resultados.Add(result);
+
+            // Mostramos el tablero de disparos del jugador que acaba de disparar
+            tablero.MuestraTableroDisparos();
 
             return resultados;
         }
@@ -385,6 +388,9 @@
 
             ResultadoDisparo result = DisparoBase(tablero, shoot);
             resultados.Add(result);
+
+            // Mostramos el tablero de disparos del jugador que acaba de disparar
+            tablero.MuestraTableroDisparos();
 
             return resultados;
         }

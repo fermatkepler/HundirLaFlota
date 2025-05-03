@@ -24,6 +24,13 @@ namespace HundirLaFlota
         Hundido
     }
 
+    public enum PintarDisparo
+    {
+        SinDisparo = 0,
+        Tocado,
+        Agua
+    }
+
     public enum ResultadoDisparo
     {
         Agua = 0,

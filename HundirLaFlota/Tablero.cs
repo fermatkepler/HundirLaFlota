@@ -4,7 +4,8 @@ namespace HundirLaFlota
 {
     public class Tablero
     {
-        private readonly Barco[,] _tablero;
+        private readonly Barco[,] _tableroBarcos;
+        private readonly PintarDisparo[,] _tableroDisparos;
         private readonly List<Barco> _barcos;
 
         public string Nombre {get; }
@@ -22,7 +23,8 @@ namespace HundirLaFlota
         public Tablero(string nombre)
         {
             Nombre = nombre;
-            _tablero = new Barco [10, 10];
+            _tableroBarcos = new Barco [10, 10];
+            _tableroDisparos = new PintarDisparo[10, 10];
             _barcos = new List<Barco>();
         }
 
@@ -59,7 +61,7 @@ namespace HundirLaFlota
                 for (int i = min; i <= max; i++)
                 {
                     //Si hay ya algún barco en ese rango, no se puede superponer el nuevo
-                    if (_tablero[i, fin.y] != null)
+                    if (_tableroBarcos[i, fin.y] != null)
                     {
                         if (!soyIA)
                         {
@@ -75,7 +77,7 @@ namespace HundirLaFlota
                 int max = Math.Max(inicio.y, fin.y);
                 for (int i = min; i <= max; i++)
                 {
-                    if (_tablero[fin.x, i] != null)
+                    if (_tableroBarcos[fin.x, i] != null)
                     {
                         if (!soyIA)
                         {
@@ -100,7 +102,7 @@ namespace HundirLaFlota
                 int max = Math.Max(inicio.x, fin.x);
                 for (int i = min; i <= max; i++)
                 {
-                    _tablero[i, fin.y] = barco;
+                    _tableroBarcos[i, fin.y] = barco;
                 }
             }
             else
@@ -109,7 +111,7 @@ namespace HundirLaFlota
                 int max = Math.Max(inicio.y, fin.y);
                 for (int i = min; i <= max; i++)
                 {
-                    _tablero[fin.x, i] = barco;
+                    _tableroBarcos[fin.x, i] = barco;
                 }
             }
             // Guardamos el barco en una lista de barcos propios para ver rápidamente cuáles están hundidos
@@ -124,23 +126,25 @@ namespace HundirLaFlota
                 return ResultadoDisparo.NoValido;
             }
             // recuperamos el barco que está en esa posición (si hay alguno)
-            Barco barco = _tablero[shoot.x, shoot.y];
+            Barco barco = _tableroBarcos[shoot.x, shoot.y];
 
             if (barco != null)
             {
                 //Anotamos el disparo, con lo que si es válido (no se ha repetido el tiro ni estaba hundido), reiniciamos los fallos consecutivos
                 var resultado = barco.Tocado(shoot);
-                if (resultado!=ResultadoDisparo.NoValido)
+                if (resultado == ResultadoDisparo.Tocado || resultado==ResultadoDisparo.Hundido)
                 {
                     //Inicializamos los fallos consecutivos
                     FallosConsecutivos = 0;
+                    //Se marca tocado aunque sea hundido, es solo para visualizar el disparo 
+                    _tableroDisparos[shoot.x, shoot.y] = PintarDisparo.Tocado;
+                    return resultado;
                 }
-                // Tal vez se debería contar como fallo un disparo no válido... no lo haremos
-                return resultado;
             }
 
             FallosConsecutivos++;
-            // Si es AGUA, no validamos que el tiro sea erróneo por estar repetido. Parece correcto
+            // Si es AGUA, no validamos que el tiro sea erróneo aunque esté repetido. Devolvemos agua de nuevo
+            _tableroDisparos[shoot.x, shoot.y] = PintarDisparo.Agua;
             return ResultadoDisparo.Agua;
         }
 
@@ -150,7 +154,7 @@ namespace HundirLaFlota
             {
                 for (int i = 0; i < 10; i++)
                 {
-                    Barco barco = _tablero[i, j];
+                    Barco barco = _tableroBarcos[i, j];
                     if (barco != null && !barco.EstaHundido())
                     {
                         return true;
@@ -161,7 +165,19 @@ namespace HundirLaFlota
             return false;
         }
 
-        public void PrintTablero(bool imprimeVacio = false)
+        public bool EstaHundidoAlgunBarcoDe(int longitud)
+        {
+            foreach (Barco barco in _barcos)
+            {
+                if (barco.Length == longitud)
+                {
+                    return barco.EstaHundido();
+                }
+            }
+            return true;
+        }
+
+        public void MuestraTableroBarcos(bool imprimeVacio = false)
         {
             Console.WriteLine("     0    1    2    3    4    5    6    7    8    9");
             for (int i = 0; i < 10; i++)
@@ -169,7 +185,7 @@ namespace HundirLaFlota
                 Console.Write((char)(65 + i) + "  ");
                 for (int j = 0; j < 10; j++)
                 {
-                    Barco barco = _tablero[i, j];
+                    Barco barco = _tableroBarcos[i, j];
                     if (barco != null && !imprimeVacio)
                     {
                         Console.Write(" |X| ");
@@ -183,16 +199,37 @@ namespace HundirLaFlota
             }
         }
 
-        public bool EstaHundidoAlgunBarcoDe(int longitud)
+        public void MuestraTableroDisparos()
         {
-            foreach (Barco barco in _barcos)
+            Console.WriteLine("     0    1    2    3    4    5    6    7    8    9");
+            for (int i = 0; i < 10; i++)
             {
-                if (barco.Length == longitud)
+                Console.Write((char)(65 + i) + "  ");
+                for (int j = 0; j < 10; j++)
                 {
-                    return barco.EstaHundido();
+                    var resultado = _tableroDisparos[i, j];
+                    switch(resultado)
+                    {
+                        case PintarDisparo.Tocado:
+                            {
+                                Console.Write(" |O| ");
+                                break;
+                            }
+                        case PintarDisparo.Agua:
+                            {
+                                Console.Write(" |-| ");
+                                break;
+                            }
+                        default:
+                            {
+                                Console.Write(" | | ");
+                                break;
+                            }
+                    }
                 }
+                Console.WriteLine();
+                Console.WriteLine();
             }
-            return true;
         }
     }
 }
